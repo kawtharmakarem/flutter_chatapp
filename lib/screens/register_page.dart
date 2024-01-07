@@ -3,32 +3,31 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_app/constants.dart';
 import 'package:flutter_chat_app/screens/chat_page.dart';
-import 'package:flutter_chat_app/screens/register_page.dart';
 
-import '../helper/show_snackbar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 
-class LoginPage extends StatefulWidget {
-  LoginPage({super.key});
-  static String id = 'loginpage';
+class RegisterPage extends StatefulWidget {
+  RegisterPage({super.key});
+  static String id = 'registerpage';
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  late bool isLoading = false;
+class _RegisterPageState extends State<RegisterPage> {
   String? email;
+
   String? password;
 
-  GlobalKey<FormState> formKey = GlobalKey();
+  bool isLoading=false;
+
+  GlobalKey<FormState> formKey=GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     return BlurryModalProgressHUD(
-      inAsyncCall: isLoading,
-      dismissible: false,
+      inAsyncCall: false,
       child: Scaffold(
         backgroundColor: kPrimaryColor,
         body: Padding(
@@ -62,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
                 Row(
                   children: [
                     Text(
-                      'SignIn',
+                      'SignUp',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -74,47 +73,50 @@ class _LoginPageState extends State<LoginPage> {
                   height: 10,
                 ),
                 CustomTextField(
-                  hintText: 'Email',
                   onChange: (data) {
                     email = data;
                   },
+                  hintText: 'Email',
                 ),
                 const SizedBox(
                   height: 10,
                 ),
                 CustomTextField(
-                  hintText: 'Password',
                   onChange: (data) {
                     password = data;
                   },
+                  hintText: 'Password',
                 ),
                 const SizedBox(
                   height: 20,
                 ),
                 CustomButton(
-                  text: 'Login',
+                  text: 'Register',
                   onTap: () async {
                     if (formKey.currentState!.validate()) {
+                      isLoading=true;
                       setState(() {
-                        isLoading = true;
+                        
                       });
-                      try {
-                        await loginUser();
-                        Navigator.pushNamed(context,ChatPage.id);
-                      } on FirebaseAuthException catch (e) {
-                        if (e.code == 'user-not-found') {
-                          showSnackBar(
-                              context, 'No user found for that email.');
-                        } else if (e.code == 'wrong-password') {
-                          showSnackBar(context,
-                              'Wrong password provided for that user.');
-                        }
-                      }
+        try {
+      await registerUser();
+      Navigator.pushNamed(context,ChatPage.id);
 
-                      setState(() {
-                        isLoading = !isLoading;
-                      });
-                    }
+
+        } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        showSnakBar(context,'The password provided is too weak.');
+      } else if (e.code == 'email-already-in-use') {
+        showSnakBar(context, 'The account already exists for that email.');
+      }
+        }catch(e){
+        showSnakBar(context, 'there was an error : $e');
+        }
+        isLoading=false;
+        setState(() {
+          
+        });
+      }
                   },
                 ),
                 const SizedBox(
@@ -124,15 +126,15 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'don\'t have an account ? ',
+                      'have an account ? ',
                       style: TextStyle(color: Colors.white),
                     ),
                     GestureDetector(
                         onTap: () {
-                          Navigator.pushNamed(context, RegisterPage.id);
+                          Navigator.pop(context);
                         },
                         child: Text(
-                          'Register',
+                          'Login',
                           style: TextStyle(color: Color(0xffc7ede6)),
                         ))
                   ],
@@ -145,8 +147,14 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Future<void> loginUser() async {
-    UserCredential user = await FirebaseAuth.instance
-        .signInWithEmailAndPassword(email: email!, password: password!);
+  void showSnakBar(BuildContext context ,String text) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  Future<void> registerUser() async {
+    var auth = FirebaseAuth.instance;
+    UserCredential user =
+        await auth.createUserWithEmailAndPassword(
+            email: email!, password: password!);
   }
 }
