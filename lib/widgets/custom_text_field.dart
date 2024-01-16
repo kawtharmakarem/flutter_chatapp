@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
-   CustomTextField({
-    this.hintText,this.onChange
+   CustomTextField({super.key, 
+    this.hintText,this.onChange,this.obscureText=false
   });
   String? hintText;
+  bool? obscureText;
   Function(String)? onChange;
 
   @override
@@ -18,6 +19,7 @@ class CustomTextField extends StatelessWidget {
         }
       },
       onChanged: onChange,
+      obscureText: obscureText!,
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: TextStyle(
